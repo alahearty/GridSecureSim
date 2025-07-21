@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: energy_trading_db
+    environment:
+      POSTGRES_DB: energy_trading_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "2001:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy_network
+
+  # Backend Server
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: energy_trading_backend
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=energy_trading_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
+      - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
+      - CONTRACT_PRIVATE_KEY=${CONTRACT_PRIVATE_KEY}
+      - FRONTEND_URL=http://localhost:2000
+    ports:
+      - "2002:3001"
+    depends_on:
+      - postgres
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - energy_network
+    restart: unless-stopped
+
+  # Frontend Dashboard
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: energy_trading_frontend
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:2002
+      - REACT_APP_BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
+    ports:
+      - "2000:3000"
+    depends_on:
+      - backend
+    networks:
+      - energy_network
+    restart: unless-stopped
+
+  # Forta Agent (Development)
+  forta-agent:
+    build:
+      context: .
+      dockerfile: forta-agent/Dockerfile
+    container_name: energy_trading_forta_agent
+    environment:
+      - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
+      - BACKEND_API_URL=http://backend:3001/api/alerts
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
+    depends_on:
+      - backend
+    networks:
+      - energy_network
+    restart: unless-stopped
+
+  # Simulation Engine
+  simulation:
+    build:
+      context: .
+      dockerfile: simulation/Dockerfile
+    container_name: energy_trading_simulation
+    environment:
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
+      - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
+      - SIMULATION_PRIVATE_KEY=${SIMULATION_PRIVATE_KEY}
+      - BACKEND_URL=http://backend:3001/api
+    depends_on:
+      - backend
+    networks:
+      - energy_network
+    restart: unless-stopped
+
+  # Local Blockchain Node (Optional)
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    container_name: energy_trading_ganache
+    command: ganache-cli --host 0.0.0.0 --port 8545 --accounts 10 --deterministic
+    ports:
+      - "8545:8545"
+    networks:
+      - energy_network
+    profiles:
+      - local
+
+volumes:
+  postgres_data:
+
+networks:
+  energy_network:
+    driver: bridge 
