@@ -25,7 +25,7 @@ class SimulationEngine {
             priceRange: config.priceRange || [0.1, 2.0], // ETH per kWh
             
             // Backend API
-            backendUrl: config.backendUrl || 'http://localhost:2002/api',
+            backendUrl: config.backendUrl || 'http://localhost:2001/api',
             
             // Attack scenarios
             attackScenarios: config.attackScenarios || ['front-running', 'flash-loan', 'volume-manipulation']

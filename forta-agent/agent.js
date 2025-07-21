@@ -18,7 +18,7 @@ const CONFIG = {
     VOLUME_ANALYSIS_WINDOW: 5 * 60 * 1000, // 5 minutes
     
     // Backend API endpoint
-    BACKEND_API_URL: process.env.BACKEND_API_URL || "http://localhost:3001/api/alerts"
+    BACKEND_API_URL: process.env.BACKEND_API_URL || "http://localhost:2001/api/alerts"
 };
 
 // In-memory storage for tracking

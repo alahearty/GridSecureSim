@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:2000",
+        origin: process.env.FRONTEND_URL || "http://localhost:2003",
         methods: ["GET", "POST"]
     }
 });
@@ -42,7 +42,7 @@ const sequelize = new Sequelize(
     process.env.DB_PASSWORD || 'password',
     {
         host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
+        port: process.env.DB_PORT || 2000,
         dialect: 'postgres',
         logging: false
     }

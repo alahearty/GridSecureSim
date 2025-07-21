@@ -3,14 +3,14 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15
+    image: postgres:17
     container_name: energy_trading_db
     environment:
       POSTGRES_DB: energy_trading_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
-      - "2001:5432"
+      - "2000:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -35,7 +35,7 @@ services:
       - CONTRACT_PRIVATE_KEY=${CONTRACT_PRIVATE_KEY}
       - FRONTEND_URL=http://localhost:2000
     ports:
-      - "2002:3001"
+      - "2001:3001"
     depends_on:
       - postgres
     volumes:
@@ -54,7 +54,7 @@ services:
       - REACT_APP_BACKEND_URL=http://localhost:2002
       - REACT_APP_BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
     ports:
-      - "2000:3000"
+      - "2002:3000"
     depends_on:
       - backend
     networks:
@@ -87,7 +87,7 @@ services:
       - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
       - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
       - SIMULATION_PRIVATE_KEY=${SIMULATION_PRIVATE_KEY}
-      - BACKEND_URL=http://backend:3001/api
+      - BACKEND_URL=http://backend:2001/api
     depends_on:
       - backend
     networks:
