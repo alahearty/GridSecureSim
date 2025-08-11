@@ -24,7 +24,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: energy_trading_backend
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=energy_trading_db
@@ -33,7 +33,8 @@ services:
       - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
       - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
       - CONTRACT_PRIVATE_KEY=${CONTRACT_PRIVATE_KEY}
-      - FRONTEND_URL=http://localhost:2000
+      - FRONTEND_URL=http://localhost:2002
+      - PORT=3001
     ports:
       - "2001:3001"
     depends_on:
@@ -51,7 +52,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: energy_trading_frontend
     environment:
-      - REACT_APP_BACKEND_URL=http://localhost:2002
+      - REACT_APP_BACKEND_URL=http://localhost:2001
       - REACT_APP_BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
     ports:
       - "2002:3000"
@@ -87,7 +88,7 @@ services:
       - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://localhost:8545}
       - ENERGY_CONTRACT_ADDRESS=${ENERGY_CONTRACT_ADDRESS}
       - SIMULATION_PRIVATE_KEY=${SIMULATION_PRIVATE_KEY}
-      - BACKEND_URL=http://backend:2001/api
+      - BACKEND_URL=http://backend:3001/api
     depends_on:
       - backend
     networks:

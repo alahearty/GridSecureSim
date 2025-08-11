@@ -3,16 +3,14 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy root package files first
 COPY package*.json ./
-COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install root dependencies
 RUN npm ci --only=production
 
-# Copy source code
+# Copy backend source code
 COPY backend/ ./backend/
-COPY contracts/ ./contracts/
 
 # Create logs directory
 RUN mkdir -p logs
