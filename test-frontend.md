@@ -13,10 +13,20 @@ The frontend has been successfully enhanced with extensive mock data that covers
 
 ### **Dashboard Overview**
 - **Key Metrics Cards**: Total Alerts, Total Trades, Daily Volume, Total Gas Used
+- **Trading Activity Charts**: Interactive charts with multiple chart types and time ranges
 - **Alert Severity Breakdown**: Visual progress bars showing High/Medium/Low severity distribution
 - **Trade Status Breakdown**: Progress bars for completed/pending/failed trades
 - **Recent Activity**: Latest 5 alerts and trades with detailed information
 - **System Status**: Network health indicator and last update timestamp
+
+### **Trading Charts Features**
+- **Multiple Chart Types**: Line charts (dual-axis), Area charts, and Bar charts
+- **Time Range Selection**: 1H, 6H, 24H, and 7D views
+- **Dual-Axis Line Charts**: Volume (left axis) and Price (right axis) on same chart
+- **Real-time Data**: Charts update automatically with new trading data
+- **Interactive Tooltips**: Hover over data points for detailed information
+- **Responsive Design**: Charts adapt to different screen sizes
+- **Data Aggregation**: Automatic grouping by hour or day based on time range
 
 ### **Security Alerts Page**
 - **10 Comprehensive Alerts** covering various security scenarios:
@@ -70,28 +80,37 @@ The frontend has been successfully enhanced with extensive mock data that covers
 - ✅ Monitor recent activity sections
 - ✅ Verify system status updates
 
-### **2. Alert Management**
+### **2. Trading Charts Testing**
+- ✅ View different chart types (Line, Area, Bar)
+- ✅ Switch between time ranges (1H, 6H, 24H, 7D)
+- ✅ Verify dual-axis line charts show volume and price
+- ✅ Check interactive tooltips on data points
+- ✅ Monitor real-time chart updates with new trades
+- ✅ Test chart responsiveness on different screen sizes
+- ✅ Verify data aggregation by time periods
+
+### **3. Alert Management**
 - ✅ Search alerts by type, message, or details
 - ✅ Filter by severity (High/Medium/Low)
 - ✅ Click alerts to view detailed information
 - ✅ Monitor real-time alert generation
 - ✅ Test alert resolution simulation
 
-### **3. Trade Analysis**
+### **4. Trade Analysis**
 - ✅ Search trades by address or transaction hash
 - ✅ Filter by status (completed/pending/failed)
 - ✅ Filter by trade type (normal/large/whale)
 - ✅ View comprehensive trade details
 - ✅ Monitor trade completion simulation
 
-### **4. Circuit Breaker Operations**
+### **5. Circuit Breaker Operations**
 - ✅ View current system status
 - ✅ Monitor system health indicators
 - ✅ Test manual circuit breaker controls
 - ✅ Try different action types and reasons
 - ✅ Verify alert generation on circuit breaker actions
 
-### **5. Real-Time Features**
+### **6. Real-Time Features**
 - ✅ Watch for new alerts appearing
 - ✅ Observe new trades being added
 - ✅ Monitor status changes (alerts resolving, trades completing)
@@ -156,8 +175,11 @@ The mock data can be easily modified in `frontend/src/App.js`:
 ## 📈 Expected Behavior
 
 - **Initial Load**: 10 alerts, 12 trades, comprehensive statistics
+- **Trading Charts**: Interactive charts with real-time data updates
+- **Chart Types**: Line (dual-axis), Area, and Bar chart options
+- **Time Ranges**: 1H, 6H, 24H, and 7D data views
 - **Real-Time Updates**: New data appears every 10 seconds
-- **Interactive Elements**: All buttons, filters, and search functions work
+- **Interactive Elements**: All buttons, filters, search functions, and charts work
 - **Data Consistency**: Statistics always match the displayed data
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 

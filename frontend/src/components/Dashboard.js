@@ -1,14 +1,100 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, 
-  LinearProgress, Chip, Alert, Paper
+  LinearProgress, Chip, Alert, Paper, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import {
   TrendingUp, TrendingDown, Warning, CheckCircle,
-  Error, Info, Timeline, Speed
+  Error, Info, Timeline, Speed, ShowChart, BarChart
 } from '@mui/icons-material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, AreaChart, Area } from 'recharts';
 
 const Dashboard = ({ alerts, trades, stats }) => {
+  const [chartData, setChartData] = useState([]);
+  const [chartType, setChartType] = useState('line');
+  const [timeRange, setTimeRange] = useState('24h');
+
+  useEffect(() => {
+    // Generate chart data from trades
+    if (trades && trades.length > 0) {
+      const now = Date.now();
+      let data = [];
+      
+      switch (timeRange) {
+        case '1h':
+          data = generateHourlyData(trades, now, 1);
+          break;
+        case '6h':
+          data = generateHourlyData(trades, now, 6);
+          break;
+        case '24h':
+          data = generateHourlyData(trades, now, 24);
+          break;
+        case '7d':
+          data = generateDailyData(trades, now, 7);
+          break;
+        default:
+          data = generateHourlyData(trades, now, 24);
+      }
+      
+      setChartData(data);
+    }
+  }, [trades, timeRange]);
+
+  const generateHourlyData = (trades, now, hours) => {
+    const data = [];
+    for (let i = hours; i >= 0; i--) {
+      const time = new Date(now - i * 60 * 60 * 1000);
+      const hourTrades = trades.filter(trade => {
+        const tradeTime = new Date(trade.timestamp);
+        return tradeTime.getHours() === time.getHours() && 
+               tradeTime.getDate() === time.getDate();
+      });
+      
+      const volume = hourTrades.reduce((sum, trade) => sum + parseFloat(trade.amount), 0);
+      const avgPrice = hourTrades.length > 0 
+        ? hourTrades.reduce((sum, trade) => sum + parseFloat(trade.price), 0) / hourTrades.length
+        : 0;
+      const tradeCount = hourTrades.length;
+      
+      data.push({
+        time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        volume: parseFloat(volume.toFixed(2)),
+        price: parseFloat(avgPrice.toFixed(4)),
+        trades: tradeCount,
+        timestamp: time.getTime()
+      });
+    }
+    return data;
+  };
+
+  const generateDailyData = (trades, now, days) => {
+    const data = [];
+    for (let i = days; i >= 0; i--) {
+      const time = new Date(now - i * 24 * 60 * 60 * 1000);
+      const dayTrades = trades.filter(trade => {
+        const tradeTime = new Date(trade.timestamp);
+        return tradeTime.getDate() === time.getDate() && 
+               tradeTime.getMonth() === time.getMonth();
+      });
+      
+      const volume = dayTrades.reduce((sum, trade) => sum + parseFloat(trade.amount), 0);
+      const avgPrice = dayTrades.length > 0 
+        ? dayTrades.reduce((sum, trade) => sum + parseFloat(trade.price), 0) / dayTrades.length
+        : 0;
+      const tradeCount = dayTrades.length;
+      
+      data.push({
+        time: time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        volume: parseFloat(volume.toFixed(2)),
+        price: parseFloat(avgPrice.toFixed(4)),
+        trades: tradeCount,
+        timestamp: time.getTime()
+      });
+    }
+    return data;
+  };
+
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'High': return 'error';
@@ -64,6 +150,143 @@ const Dashboard = ({ alerts, trades, stats }) => {
     normal: trades.filter(t => t.type === 'normal').length,
     large: trades.filter(t => t.type === 'large').length,
     whale: trades.filter(t => t.type === 'whale').length
+  };
+
+  const renderChart = () => {
+    if (chartData.length === 0) {
+      return (
+        <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            No trading data available for the selected time range
+          </Typography>
+        </Box>
+      );
+    }
+
+    switch (chartType) {
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis 
+                dataKey="time" 
+                stroke="#fff"
+                tick={{ fill: '#fff' }}
+              />
+              <YAxis 
+                yAxisId="left"
+                stroke="#2196f3"
+                tick={{ fill: '#2196f3' }}
+                label={{ value: 'Volume (ETH)', angle: -90, position: 'insideLeft', fill: '#2196f3' }}
+              />
+              <YAxis 
+                yAxisId="right"
+                orientation="right"
+                stroke="#ff9800"
+                tick={{ fill: '#ff9800' }}
+                label={{ value: 'Price (ETH)', angle: 90, position: 'insideRight', fill: '#ff9800' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#333', 
+                  border: '1px solid #555',
+                  borderRadius: '8px',
+                  color: '#fff'
+                }}
+              />
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="volume" 
+                stroke="#2196f3" 
+                strokeWidth={3}
+                dot={{ fill: '#2196f3', strokeWidth: 2, r: 4 }}
+                name="Volume"
+              />
+              <Line 
+                yAxisId="right"
+                type="monotone" 
+                dataKey="price" 
+                stroke="#ff9800" 
+                strokeWidth={2}
+                dot={{ fill: '#ff9800', strokeWidth: 2, r: 3 }}
+                name="Price"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <AreaChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis 
+                dataKey="time" 
+                stroke="#fff"
+                tick={{ fill: '#fff' }}
+              />
+              <YAxis 
+                stroke="#4caf50"
+                tick={{ fill: '#4caf50' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#333', 
+                  border: '1px solid #555',
+                  borderRadius: '8px',
+                  color: '#fff'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="volume" 
+                stroke="#4caf50" 
+                fill="#4caf50"
+                fillOpacity={0.3}
+                strokeWidth={2}
+                name="Volume"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <RechartsBarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis 
+                dataKey="time" 
+                stroke="#fff"
+                tick={{ fill: '#fff' }}
+              />
+              <YAxis 
+                stroke="#9c27b0"
+                tick={{ fill: '#9c27b0' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#333', 
+                  border: '1px solid #555',
+                  borderRadius: '8px',
+                  color: '#fff'
+                }}
+              />
+              <Bar 
+                dataKey="volume" 
+                fill="#9c27b0"
+                radius={[4, 4, 0, 0]}
+                name="Volume"
+              />
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        );
+      
+      default:
+        return null;
+    }
   };
 
   return (
@@ -150,6 +373,75 @@ const Dashboard = ({ alerts, trades, stats }) => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Trading Charts Section */}
+      <Card sx={{ bgcolor: 'background.paper', mb: 4 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ShowChart sx={{ mr: 1, color: 'primary.main' }} />
+              <Typography variant="h6" sx={{ color: 'white' }}>
+                Trading Activity Charts
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <ToggleButtonGroup
+                value={timeRange}
+                exclusive
+                onChange={(e, newRange) => newRange && setTimeRange(newRange)}
+                size="small"
+                sx={{ bgcolor: 'background.default' }}
+              >
+                <ToggleButton value="1h" sx={{ color: 'white' }}>1H</ToggleButton>
+                <ToggleButton value="6h" sx={{ color: 'white' }}>6H</ToggleButton>
+                <ToggleButton value="24h" sx={{ color: 'white' }}>24H</ToggleButton>
+                <ToggleButton value="7d" sx={{ color: 'white' }}>7D</ToggleButton>
+              </ToggleButtonGroup>
+              
+              <ToggleButtonGroup
+                value={chartType}
+                exclusive
+                onChange={(e, newType) => newType && setChartType(newType)}
+                size="small"
+                sx={{ bgcolor: 'background.default' }}
+              >
+                <ToggleButton value="line" sx={{ color: 'white' }}>
+                  <ShowChart fontSize="small" />
+                </ToggleButton>
+                <ToggleButton value="area" sx={{ color: 'white' }}>
+                  <BarChart fontSize="small" />
+                </ToggleButton>
+                <ToggleButton value="bar" sx={{ color: 'white' }}>
+                  <BarChart fontSize="small" />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
+          
+          {renderChart()}
+          
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Data updates in real-time • Last update: {new Date().toLocaleTimeString()}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Chip 
+                icon={<TrendingUp />} 
+                label={`Volume: ${chartData.reduce((sum, d) => sum + d.volume, 0).toFixed(2)} ETH`} 
+                color="primary" 
+                size="small" 
+              />
+              <Chip 
+                icon={<ShowChart />} 
+                label={`Trades: ${chartData.reduce((sum, d) => sum + d.trades, 0)}`} 
+                color="secondary" 
+                size="small" 
+              />
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Charts and Breakdowns */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
