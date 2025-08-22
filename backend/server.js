@@ -158,7 +158,7 @@ const CircuitBreakerEvent = sequelize.define('CircuitBreakerEvent', {
 });
 
 // Blockchain configuration
-const provider = new ethers.providers.JsonRpcProvider(
+const provider = new ethers.JsonRpcProvider(
     process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:8545'
 );
 

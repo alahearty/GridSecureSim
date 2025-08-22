@@ -12,6 +12,9 @@ RUN npm ci --only=production
 # Copy backend source code
 COPY backend/ ./backend/
 
+# Copy contracts directory
+COPY contracts/ ./contracts/
+
 # Create logs directory
 RUN mkdir -p logs
 

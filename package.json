@@ -25,7 +25,8 @@
     "socket.io": "^4.7.2",
     "axios": "^1.5.0",
     "node-cron": "^3.0.2",
-    "winston": "^3.10.0"
+    "winston": "^3.10.0",
+    "forta-agent": "^0.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

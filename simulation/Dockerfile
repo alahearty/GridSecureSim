@@ -11,6 +11,9 @@ RUN npm install
 # Copy simulation source code
 COPY simulation/ ./simulation/
 
+# Copy contracts directory
+COPY contracts/ ./contracts/
+
 # Expose port
 EXPOSE 3000
 

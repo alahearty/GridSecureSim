@@ -75,22 +75,29 @@ const Navigation = ({ circuitBreakerState, stats }) => {
 
         <Divider sx={{ backgroundColor: '#333', mb: 2 }} />
 
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ color: 'gray', mb: 1 }}>
+        {/* Statistics */}
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
             Statistics
           </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="caption" sx={{ color: 'white' }}>
-              Total Alerts: {stats.totalAlerts}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Total Alerts: <Chip label={stats.totalAlerts} size="small" color="error" />
             </Typography>
-            <Typography variant="caption" sx={{ color: 'white' }}>
-              Active Alerts: {stats.activeAlerts}
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Active Alerts: <Chip label={stats.activeAlerts} size="small" color="warning" />
             </Typography>
-            <Typography variant="caption" sx={{ color: 'white' }}>
-              Total Trades: {stats.totalTrades}
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Total Trades: <Chip label={stats.totalTrades} size="small" color="info" />
             </Typography>
-            <Typography variant="caption" sx={{ color: 'white' }}>
-              Daily Volume: {stats.dailyVolume}
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Daily Volume: <Chip label={`${stats.dailyVolume} ETH`} size="small" color="success" />
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Network Health: <Chip label={stats.networkHealth} size="small" color="success" />
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
+              Last Update: {new Date(stats.lastUpdate).toLocaleTimeString()}
             </Typography>
           </Box>
         </Box>

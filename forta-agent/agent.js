@@ -7,11 +7,11 @@ const CONFIG = {
     ENERGY_CONTRACT_ADDRESS: process.env.ENERGY_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000",
     
     // Anomaly detection thresholds
-    SUSPICIOUS_VOLUME_THRESHOLD: ethers.utils.parseEther("500"), // 500 ETH
+    SUSPICIOUS_VOLUME_THRESHOLD: ethers.parseEther("500"), // 500 ETH
     RAPID_TRADE_THRESHOLD: 5, // trades per minute
-    UNUSUAL_PRICE_MIN: ethers.utils.parseEther("0.1"), // 0.1 ETH
-    UNUSUAL_PRICE_MAX: ethers.utils.parseEther("2"), // 2 ETH
-    LARGE_MINTING_THRESHOLD: ethers.utils.parseEther("500"), // 500 ETH
+    UNUSUAL_PRICE_MIN: ethers.parseEther("0.1"), // 0.1 ETH
+    UNUSUAL_PRICE_MAX: ethers.parseEther("2"), // 2 ETH
+    LARGE_MINTING_THRESHOLD: ethers.parseEther("500"), // 500 ETH
     
     // Time windows for analysis
     ANALYSIS_WINDOW: 60 * 1000, // 1 minute in milliseconds
@@ -131,7 +131,7 @@ async function processMintingEvents(txEvent) {
             findings.push(
                 Finding.fromObject({
                     name: "Large Energy Token Minting Detected",
-                    description: `Large amount of energy tokens minted: ${ethers.utils.formatEther(amount)} ETH`,
+                    description: `Large amount of energy tokens minted: ${ethers.formatEther(amount)} ETH`,
                     alertId: "ENERGY-LARGE-MINTING",
                     severity: FindingSeverity.Medium,
                     type: FindingType.Suspicious,
@@ -223,7 +223,7 @@ async function detectTradeAnomalies(buyer, seller, amount, price, timestamp) {
         findings.push(
             Finding.fromObject({
                 name: "Suspicious Trade Volume Detected",
-                description: `Large trade volume detected: ${ethers.utils.formatEther(amount)} ETH`,
+                description: `Large trade volume detected: ${ethers.formatEther(amount)} ETH`,
                 alertId: "ENERGY-SUSPICIOUS-VOLUME",
                 severity: FindingSeverity.Medium,
                 type: FindingType.Suspicious,
@@ -244,7 +244,7 @@ async function detectTradeAnomalies(buyer, seller, amount, price, timestamp) {
         findings.push(
             Finding.fromObject({
                 name: "Unusual Trade Price Detected",
-                description: `Unusual price detected: ${ethers.utils.formatEther(price)} ETH`,
+                description: `Unusual price detected: ${ethers.formatEther(price)} ETH`,
                 alertId: "ENERGY-UNUSUAL-PRICE",
                 severity: FindingSeverity.Medium,
                 type: FindingType.Suspicious,
@@ -300,7 +300,7 @@ async function detectFrontRunning(buyer, seller, amount, price, timestamp) {
     // Check if there are multiple trades with similar parameters in a short time
     const similarTrades = recentTrades.filter(trade => 
         trade.seller === seller &&
-        Math.abs(trade.price - price) < ethers.utils.parseEther("0.01") &&
+        Math.abs(trade.price - price) < ethers.parseEther("0.01") &&
         Math.abs(trade.timestamp - timestamp) < 30000 // 30 seconds
     );
     

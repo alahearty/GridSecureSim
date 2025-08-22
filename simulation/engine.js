@@ -31,7 +31,7 @@ class SimulationEngine {
             attackScenarios: config.attackScenarios || ['front-running', 'flash-loan', 'volume-manipulation']
         };
         
-        this.provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
+        this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl);
         this.wallet = new ethers.Wallet(this.config.privateKey, this.provider);
         this.contract = null;
         this.simulationRunning = false;
@@ -135,8 +135,8 @@ class SimulationEngine {
             const tradeData = {
                 buyer,
                 seller,
-                amount: ethers.utils.parseEther(amount.toString()),
-                price: ethers.utils.parseEther(price.toString()),
+                            amount: ethers.parseEther(amount.toString()),
+            price: ethers.parseEther(price.toString()),
                 timestamp: Date.now(),
                 type: 'normal'
             };
@@ -303,8 +303,8 @@ class SimulationEngine {
                 const frontRunTrade = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                    amount: ethers.utils.parseEther((amount * (1 + i * 0.1)).toString()),
-                    price: ethers.utils.parseEther((price * (1 + i * 0.05)).toString()),
+                                amount: ethers.parseEther((amount * (1 + i * 0.1)).toString()),
+            price: ethers.parseEther((price * (1 + i * 0.05)).toString()),
                     timestamp: Date.now() + i * 1000, // 1 second apart
                     type: 'front-running'
                 };
@@ -364,8 +364,8 @@ class SimulationEngine {
                 const tradeData = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                    amount: ethers.utils.parseEther(step.amount.toString()),
-                    price: ethers.utils.parseEther(step.price.toString()),
+                                amount: ethers.parseEther(step.amount.toString()),
+            price: ethers.parseEther(step.price.toString()),
                     timestamp: step.timestamp,
                     type: 'flash-loan'
                 };
@@ -401,8 +401,8 @@ class SimulationEngine {
                 const manipulationTrade = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                    amount: ethers.utils.parseEther((manipulationAmount / 5).toString()),
-                    price: ethers.utils.parseEther(this.generateRandomPrice(0.8, 1.2).toString()),
+                                amount: ethers.parseEther((manipulationAmount / 5).toString()),
+            price: ethers.parseEther(this.generateRandomPrice(0.8, 1.2).toString()),
                     timestamp: Date.now() + i * 2000, // 2 seconds apart
                     type: 'volume-manipulation'
                 };
@@ -430,7 +430,7 @@ class SimulationEngine {
         try {
             const mintData = {
                 producer: address,
-                amount: ethers.utils.parseEther(amount.toString()),
+                amount: ethers.parseEther(amount.toString()),
                 timestamp: Date.now()
             };
             
@@ -486,10 +486,10 @@ class SimulationEngine {
             totalAttacks: this.attackHistory.length,
             attackTypes: this.attackHistory.map(attack => attack.type),
             tradeVolume: this.tradeHistory.reduce((sum, trade) => 
-                sum + parseFloat(ethers.utils.formatEther(trade.amount)), 0
+                sum + parseFloat(ethers.formatEther(trade.amount)), 0
             ),
             averagePrice: this.tradeHistory.reduce((sum, trade) => 
-                sum + parseFloat(ethers.utils.formatEther(trade.price)), 0
+                sum + parseFloat(ethers.formatEther(trade.price)), 0
             ) / this.tradeHistory.length
         };
         
