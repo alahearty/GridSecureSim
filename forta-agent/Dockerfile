@@ -6,5 +6,6 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY forta-agent/ ./forta-agent/
+COPY contracts/ ./contracts/
 
 CMD ["node", "forta-agent/agent.js"]
