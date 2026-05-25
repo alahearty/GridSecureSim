@@ -1,18 +1,10 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy root package files first
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install root dependencies
-RUN npm install
-
-# Copy forta-agent source code
 COPY forta-agent/ ./forta-agent/
 
-# Expose port
-EXPOSE 3000
-
-# Start forta agent
 CMD ["node", "forta-agent/agent.js"]

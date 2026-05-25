@@ -1,21 +1,11 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy root package files first
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install root dependencies
-RUN npm install
-
-# Copy simulation source code
 COPY simulation/ ./simulation/
-
-# Copy contracts directory
 COPY contracts/ ./contracts/
 
-# Expose port
-EXPOSE 3000
-
-# Start simulation engine
 CMD ["node", "simulation/engine.js"]

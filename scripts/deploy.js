@@ -3,6 +3,8 @@ const hre = require("hardhat");
 async function main() {
   console.log("Deploying Energy Trading Contract...");
 
+  const [deployer] = await hre.ethers.getSigners();
+
   // Get the contract factory
   const EnergyTradingContract = await hre.ethers.getContractFactory("EnergyTradingContract");
   
@@ -10,24 +12,25 @@ async function main() {
   const energyContract = await EnergyTradingContract.deploy();
   
   // Wait for deployment to finish
-  await energyContract.deployed();
+  await energyContract.waitForDeployment();
+  const contractAddress = await energyContract.getAddress();
 
-  console.log("Energy Trading Contract deployed to:", energyContract.address);
+  console.log("Energy Trading Contract deployed to:", contractAddress);
   
   // Log deployment information
   console.log("\n=== Deployment Information ===");
-  console.log("Contract Address:", energyContract.address);
+  console.log("Contract Address:", contractAddress);
   console.log("Network:", hre.network.name);
-  console.log("Deployer:", await energyContract.signer.getAddress());
+  console.log("Deployer:", deployer.address);
   
   // Verify contract on Etherscan (if not on localhost)
   if (hre.network.name !== "localhost" && hre.network.name !== "hardhat") {
     console.log("\nWaiting for block confirmations...");
-    await energyContract.deployTransaction.wait(6);
+    await energyContract.deploymentTransaction().wait(6);
     
     try {
       await hre.run("verify:verify", {
-        address: energyContract.address,
+        address: contractAddress,
         constructorArguments: [],
       });
       console.log("Contract verified on Etherscan");
@@ -39,9 +42,9 @@ async function main() {
   // Save deployment info to file
   const fs = require('fs');
   const deploymentInfo = {
-    contractAddress: energyContract.address,
+    contractAddress,
     network: hre.network.name,
-    deployer: await energyContract.signer.getAddress(),
+    deployer: deployer.address,
     deploymentTime: new Date().toISOString(),
     constructorArguments: []
   };
@@ -54,7 +57,7 @@ async function main() {
   console.log("\nDeployment info saved to:", `deployment-${hre.network.name}.json`);
   
   // Update .env file with contract address
-  updateEnvFile(energyContract.address);
+  updateEnvFile(contractAddress);
 }
 
 function updateEnvFile(contractAddress) {
