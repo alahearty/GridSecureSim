@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, Container } from '@mui/material';
-import io from 'socket.io-client';
-// import axios from 'axios'; // Commented out since we're using dummy data
 
 // Components
 import Dashboard from './components/Dashboard';
@@ -32,9 +30,6 @@ const theme = createTheme({
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   },
 });
-
-// Socket connection (commented out for now)
-// const socket = io('http://localhost:2002');
 
 // Dummy data for testing
 const DUMMY_ALERTS = [

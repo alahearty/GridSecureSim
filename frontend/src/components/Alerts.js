@@ -2,37 +2,20 @@ import React, { useState } from 'react';
 import {
   Box, Typography, TextField, Button, Card, CardContent,
   Chip, IconButton, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Grid, Alert, Tooltip, Dialog,
+  TableHead, TableRow, Paper, Grid, Tooltip, Dialog,
   DialogTitle, DialogContent, DialogActions, Divider
 } from '@mui/material';
 import {
   Search, Refresh, FilterList, Info, Warning, Error,
   CheckCircle, Schedule, Source
 } from '@mui/icons-material';
+import { getSeverityColor, getStatusColor } from '../utils';
 
 const Alerts = ({ alerts, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('All');
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'High': return 'error';
-      case 'Medium': return 'warning';
-      case 'Low': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active': return 'error';
-      case 'Monitoring': return 'warning';
-      case 'Resolved': return 'success';
-      default: return 'default';
-    }
-  };
 
   const getSeverityIcon = (severity) => {
     switch (severity) {

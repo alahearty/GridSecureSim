@@ -9,6 +9,7 @@ import {
   Search, Refresh, FilterList, Info, TrendingUp, 
   TrendingDown, Schedule, AccountBalance, Receipt
 } from '@mui/icons-material';
+import { getTradeTypeColor, getTradeStatusColor } from '../utils';
 
 const Trades = ({ trades, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,24 +17,6 @@ const Trades = ({ trades, onRefresh }) => {
   const [typeFilter, setTypeFilter] = useState('All');
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'pending': return 'warning';
-      case 'failed': return 'error';
-      default: return 'default';
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'whale': return 'error';
-      case 'large': return 'warning';
-      case 'normal': return 'info';
-      default: return 'default';
-    }
-  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -269,7 +252,7 @@ const Trades = ({ trades, onRefresh }) => {
                         <Chip
                           icon={getTypeIcon(trade.type)}
                           label={trade.type}
-                          color={getTypeColor(trade.type)}
+                          color={getTradeTypeColor(trade.type)}
                           size="small"
                         />
                       </TableCell>
@@ -297,7 +280,7 @@ const Trades = ({ trades, onRefresh }) => {
                         <Chip
                           icon={getStatusIcon(trade.status)}
                           label={trade.status}
-                          color={getStatusColor(trade.status)}
+                          color={getTradeStatusColor(trade.status)}
                           size="small"
                         />
                       </TableCell>
@@ -357,7 +340,7 @@ const Trades = ({ trades, onRefresh }) => {
                 </Typography>
                 <Chip
                   label={selectedTrade.type}
-                  color={getTypeColor(selectedTrade.type)}
+                  color={getTradeTypeColor(selectedTrade.type)}
                   size="small"
                 />
               </Box>
@@ -388,7 +371,7 @@ const Trades = ({ trades, onRefresh }) => {
                   <Chip
                     icon={getStatusIcon(selectedTrade.status)}
                     label={selectedTrade.status}
-                    color={getStatusColor(selectedTrade.status)}
+                    color={getTradeStatusColor(selectedTrade.status)}
                     sx={{ mb: 2 }}
                   />
                   {selectedTrade.gasUsed && (

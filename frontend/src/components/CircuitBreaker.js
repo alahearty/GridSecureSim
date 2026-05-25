@@ -3,28 +3,19 @@ import {
   Box, Card, CardContent, Typography, Button, Grid, 
   Alert, Chip, Dialog, DialogTitle, DialogContent, 
   DialogActions, TextField, FormControl, InputLabel, 
-  Select, MenuItem, Divider, Paper
+  Select, MenuItem, Paper
 } from '@mui/material';
 import { 
   Warning, Error, CheckCircle, PowerSettingsNew,
   Security, Speed, History, Settings
 } from '@mui/icons-material';
+import { getCircuitBreakerColor } from '../utils';
 
 const CircuitBreaker = ({ state, onTrigger, stats }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [action, setAction] = useState('Triggered');
   const [reason, setReason] = useState('');
   const [customReason, setCustomReason] = useState('');
-
-  const getStateColor = (state) => {
-    switch (state) {
-      case 'Normal': return 'success';
-      case 'Warning': return 'warning';
-      case 'Triggered': return 'error';
-      case 'Emergency': return 'error';
-      default: return 'default';
-    }
-  };
 
   const getStateIcon = (state) => {
     switch (state) {
@@ -108,7 +99,7 @@ const CircuitBreaker = ({ state, onTrigger, stats }) => {
               </Box>
               <Chip
                 label={state}
-                color={getStateColor(state)}
+                color={getCircuitBreakerColor(state)}
                 size="large"
                 sx={{ mb: 2 }}
               />

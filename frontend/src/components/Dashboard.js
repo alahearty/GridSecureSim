@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, 
-  LinearProgress, Chip, Alert, Paper, ToggleButtonGroup, ToggleButton
+  LinearProgress, Chip, Paper, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import {
   TrendingUp, TrendingDown, Warning, CheckCircle,
   Error, Info, Timeline, Speed, ShowChart, BarChart
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, AreaChart, Area } from 'recharts';
+import { getSeverityColor, getStatusColor, getTradeTypeColor, getTradeStatusColor } from '../utils';
 
 const Dashboard = ({ alerts, trades, stats }) => {
   const [chartData, setChartData] = useState([]);
@@ -93,42 +94,6 @@ const Dashboard = ({ alerts, trades, stats }) => {
       });
     }
     return data;
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'High': return 'error';
-      case 'Medium': return 'warning';
-      case 'Low': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active': return 'error';
-      case 'Monitoring': return 'warning';
-      case 'Resolved': return 'success';
-      default: return 'default';
-    }
-  };
-
-  const getTradeTypeColor = (type) => {
-    switch (type) {
-      case 'whale': return 'error';
-      case 'large': return 'warning';
-      case 'normal': return 'info';
-      default: return 'default';
-    }
-  };
-
-  const getTradeStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'pending': return 'warning';
-      case 'failed': return 'error';
-      default: return 'default';
-    }
   };
 
   const recentAlerts = alerts.slice(0, 5);

@@ -17,6 +17,7 @@ import {
   SwapHoriz as TradesIcon,
   Warning as CircuitBreakerIcon
 } from '@mui/icons-material';
+import { getCircuitBreakerColor } from '../utils';
 
 const Navigation = ({ circuitBreakerState, stats }) => {
   const location = useLocation();
@@ -28,19 +29,6 @@ const Navigation = ({ circuitBreakerState, stats }) => {
     { text: 'Trades', icon: <TradesIcon />, path: '/trades' },
     { text: 'Circuit Breaker', icon: <CircuitBreakerIcon />, path: '/circuit-breaker' }
   ];
-
-  const getCircuitBreakerColor = (state) => {
-    switch (state) {
-      case 'Normal':
-        return 'success';
-      case 'Warning':
-        return 'warning';
-      case 'Emergency':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   return (
     <Drawer
