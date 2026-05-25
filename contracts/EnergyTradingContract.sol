@@ -108,7 +108,7 @@ contract EnergyTradingContract is ERC20, Ownable, Pausable, ReentrancyGuard {
         require(seller != address(0), "Invalid seller address");
         require(seller != msg.sender, "Cannot trade with yourself");
         require(balanceOf(seller) >= amount, "Seller has insufficient balance");
-        require(msg.value == amount * price, "Incorrect payment amount");
+        require(msg.value == (amount * price) / 1 ether, "Incorrect payment amount");
         
         // Update volume tracking
         _updateVolumeTracking(msg.sender, amount);
@@ -117,7 +117,8 @@ contract EnergyTradingContract is ERC20, Ownable, Pausable, ReentrancyGuard {
         _transfer(seller, msg.sender, amount);
         
         // Transfer payment to seller
-        payable(seller).transfer(msg.value);
+        (bool success, ) = payable(seller).call{value: msg.value}("");
+        require(success, "Payment transfer failed");
         
         // Update trade tracking
         _updateTradeTracking(msg.sender);
