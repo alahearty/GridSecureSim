@@ -135,8 +135,8 @@ class SimulationEngine {
             const tradeData = {
                 buyer,
                 seller,
-                            amount: ethers.parseEther(amount.toString()),
-            price: ethers.parseEther(price.toString()),
+                amount: ethers.parseEther(amount.toString()),
+                price: ethers.parseEther(price.toString()),
                 timestamp: Date.now(),
                 type: 'normal'
             };
@@ -303,8 +303,8 @@ class SimulationEngine {
                 const frontRunTrade = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                                amount: ethers.parseEther((amount * (1 + i * 0.1)).toString()),
-            price: ethers.parseEther((price * (1 + i * 0.05)).toString()),
+                    amount: ethers.parseEther((amount * (1 + i * 0.1)).toString()),
+                    price: ethers.parseEther((price * (1 + i * 0.05)).toString()),
                     timestamp: Date.now() + i * 1000, // 1 second apart
                     type: 'front-running'
                 };
@@ -364,8 +364,8 @@ class SimulationEngine {
                 const tradeData = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                                amount: ethers.parseEther(step.amount.toString()),
-            price: ethers.parseEther(step.price.toString()),
+                    amount: ethers.parseEther(step.amount.toString()),
+                    price: ethers.parseEther((step.price || 0).toString()),
                     timestamp: step.timestamp,
                     type: 'flash-loan'
                 };
@@ -401,8 +401,8 @@ class SimulationEngine {
                 const manipulationTrade = {
                     buyer: attacker,
                     seller: this.generateRandomAddress(),
-                                amount: ethers.parseEther((manipulationAmount / 5).toString()),
-            price: ethers.parseEther(this.generateRandomPrice(0.8, 1.2).toString()),
+                    amount: ethers.parseEther((manipulationAmount / 5).toString()),
+                    price: ethers.parseEther(this.generateRandomPrice(0.8, 1.2).toString()),
                     timestamp: Date.now() + i * 2000, // 2 seconds apart
                     type: 'volume-manipulation'
                 };

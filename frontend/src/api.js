@@ -51,7 +51,7 @@ export function mapTrade(trade) {
     price: String(trade.price),
     timestamp: trade.timestamp,
     type,
-    status: 'completed',
+    status: trade.status || 'completed',
     gasUsed: trade.gasUsed || 0,
     transactionHash: trade.transactionHash,
   };
