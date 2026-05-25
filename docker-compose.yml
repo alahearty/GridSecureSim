@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -97,9 +95,9 @@ services:
 
   # Local Blockchain Node (Optional)
   ganache:
-    image: trufflesuite/ganache-cli:latest
+    image: trufflesuite/ganache:latest
     container_name: energy_trading_ganache
-    command: ganache-cli --host 0.0.0.0 --port 8545 --accounts 10 --deterministic
+    command: --host 0.0.0.0 --port 8545 --accounts 10 --deterministic
     ports:
       - "8545:8545"
     networks:
