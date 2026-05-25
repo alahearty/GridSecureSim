@@ -1,0 +1,371 @@
+openapi: 3.1.0
+info:
+  title: GridSecureSim API
+  description: REST API for the blockchain energy trading protection system
+  version: 2.0.0
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        alertId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [High, Medium, Low]
+        type:
+          type: string
+        metadata:
+          type: object
+          nullable: true
+        transactionHash:
+          type: string
+          nullable: true
+        blockNumber:
+          type: integer
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, mitigated, resolved]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Trade:
+      type: object
+      properties:
+        id:
+          type: integer
+        buyer:
+          type: string
+        seller:
+          type: string
+        amount:
+          type: string
+        price:
+          type: string
+        transactionHash:
+          type: string
+        blockNumber:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    CircuitBreakerStatus:
+      type: object
+      properties:
+        state:
+          oneOf:
+            - type: integer
+            - type: string
+        totalSupply:
+          type: string
+        dailyVolume:
+          type: string
+        lastVolumeReset:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [blockchain, local, fallback]
+
+    PaginatedResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  parameters:
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags: [System]
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  circuitBreakerState:
+                    type: string
+                  activeAlerts:
+                    type: integer
+
+  /api/alerts:
+    get:
+      summary: List alerts (paginated)
+      operationId: getAlerts
+      tags: [Alerts]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, mitigated, resolved]
+      responses:
+        '200':
+          description: Paginated alert list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      alerts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Alert'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Submit alerts from Forta Agent
+      operationId: postAlerts
+      tags: [Alerts]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [findings, transactionHash]
+              properties:
+                findings:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [alertId, name, description, severity, type]
+                    properties:
+                      alertId:
+                        type: string
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      severity:
+                        type: string
+                      type:
+                        type: string
+                      metadata:
+                        type: object
+                transactionHash:
+                  type: string
+                blockNumber:
+                  type: integer
+                timestamp:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Alerts processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  processed:
+                    type: integer
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/alerts/stats:
+    get:
+      summary: Alert statistics grouped by severity, type, and status
+      operationId: getAlertStats
+      tags: [Alerts]
+      responses:
+        '200':
+          description: Aggregated alert statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        severity:
+                          type: string
+                        type:
+                          type: string
+                        status:
+                          type: string
+                        count:
+                          type: integer
+
+  /api/trades:
+    get:
+      summary: List trades (paginated)
+      operationId: getTrades
+      tags: [Trades]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Paginated trade list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      trades:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Trade'
+
+  /api/circuit-breaker:
+    post:
+      summary: Trigger circuit breaker action
+      operationId: triggerCircuitBreaker
+      tags: [CircuitBreaker]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, reason]
+              properties:
+                action:
+                  type: string
+                  enum: [pause, resume, emergency]
+                reason:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Circuit breaker triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  action:
+                    type: string
+                  reason:
+                    type: string
+        '400':
+          description: Invalid action or missing reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/circuit-breaker/status:
+    get:
+      summary: Get circuit breaker status
+      operationId: getCircuitBreakerStatus
+      tags: [CircuitBreaker]
+      responses:
+        '200':
+          description: Current circuit breaker state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitBreakerStatus'
+
+  /metrics:
+    get:
+      summary: Prometheus-compatible metrics
+      operationId: getMetrics
+      tags: [System]
+      responses:
+        '200':
+          description: Prometheus text format metrics
+          content:
+            text/plain:
+              schema:
+                type: string

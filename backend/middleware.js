@@ -1,4 +1,13 @@
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+
+// Request correlation ID middleware
+function correlationId(req, res, next) {
+  const id = req.headers['x-request-id'] || crypto.randomUUID();
+  req.correlationId = id;
+  res.setHeader('x-request-id', id);
+  next();
+}
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -33,4 +42,4 @@ function validatePagination(req, res, next) {
   next();
 }
 
-module.exports = { apiLimiter, strictLimiter, apiKeyAuth, validatePagination };
+module.exports = { apiLimiter, strictLimiter, apiKeyAuth, validatePagination, correlationId };

@@ -7,7 +7,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cron = require('node-cron');
 const winston = require('winston');
-const { apiLimiter, strictLimiter, apiKeyAuth, validatePagination } = require('./middleware');
+const { apiLimiter, strictLimiter, apiKeyAuth, validatePagination, correlationId } = require('./middleware');
+const { metricsMiddleware, formatMetrics } = require('./metrics');
 require('dotenv').config();
 
 // Initialize Express app
@@ -175,10 +176,18 @@ try {
 }
 
 // Middleware
+app.use(correlationId);
+app.use(metricsMiddleware);
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use('/api/', apiLimiter);
+
+// Prometheus metrics endpoint
+app.get('/metrics', (req, res) => {
+    res.set('Content-Type', 'text/plain; version=0.0.4');
+    res.send(formatMetrics());
+});
 
 // Global variables for tracking
 let activeAlerts = new Map();
@@ -612,6 +621,34 @@ async function startServer() {
         process.exit(1);
     }
 }
+
+// Graceful shutdown
+async function shutdown(signal) {
+    logger.info(`${signal} received, shutting down gracefully`);
+
+    // Stop accepting new connections
+    server.close(() => {
+        logger.info('HTTP server closed');
+    });
+
+    // Disconnect all sockets
+    io.close(() => {
+        logger.info('Socket.IO connections closed');
+    });
+
+    // Close database pool
+    try {
+        await sequelize.close();
+        logger.info('Database connections closed');
+    } catch (err) {
+        logger.error('Error closing database:', err);
+    }
+
+    process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 if (require.main === module) {
     startServer();
