@@ -7,6 +7,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cron = require('node-cron');
 const winston = require('winston');
+const { apiLimiter, strictLimiter, apiKeyAuth, validatePagination } = require('./middleware');
 require('dotenv').config();
 
 // Initialize Express app
@@ -163,13 +164,21 @@ const provider = new ethers.JsonRpcProvider(
 );
 
 const contractAddress = process.env.ENERGY_CONTRACT_ADDRESS;
-const contractABI = require('../contracts/EnergyTradingContract.json').abi;
-const energyContract = new ethers.Contract(contractAddress, contractABI, provider);
+let energyContract = null;
+try {
+    const contractABI = require('../contracts/EnergyTradingContract.json').abi;
+    if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
+        energyContract = new ethers.Contract(contractAddress, contractABI, provider);
+    }
+} catch (error) {
+    logger.warn('Contract ABI not found, blockchain features disabled');
+}
 
 // Middleware
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+app.use('/api/', apiLimiter);
 
 // Global variables for tracking
 let activeAlerts = new Map();
@@ -216,9 +225,16 @@ app.get('/api/health', (req, res) => {
 });
 
 // Receive alerts from Forta Agent
-app.post('/api/alerts', async (req, res) => {
+app.post('/api/alerts', apiKeyAuth, async (req, res) => {
     try {
         const { findings, transactionHash, blockNumber, timestamp } = req.body;
+        
+        if (!Array.isArray(findings) || findings.length === 0) {
+            return res.status(400).json({ error: 'findings must be a non-empty array' });
+        }
+        if (!transactionHash || typeof transactionHash !== 'string') {
+            return res.status(400).json({ error: 'transactionHash is required' });
+        }
         
         logger.info('Received alerts from Forta Agent', {
             findingsCount: findings.length,
@@ -246,18 +262,19 @@ app.post('/api/alerts', async (req, res) => {
 });
 
 // Get all alerts
-app.get('/api/alerts', async (req, res) => {
+app.get('/api/alerts', validatePagination, async (req, res) => {
     try {
-        const { page = 1, limit = 50, status } = req.query;
-        const offset = (page - 1) * limit;
+        const { page, limit, offset } = req.pagination;
+        const { status } = req.query;
         
-        const whereClause = status ? { status } : {};
+        const validStatuses = ['active', 'mitigated', 'resolved'];
+        const whereClause = (status && validStatuses.includes(status)) ? { status } : {};
         
         const alerts = await Alert.findAndCountAll({
             where: whereClause,
             order: [['timestamp', 'DESC']],
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            limit,
+            offset
         });
         
         res.json({
@@ -295,15 +312,14 @@ app.get('/api/alerts/stats', async (req, res) => {
 });
 
 // Get recent trades
-app.get('/api/trades', async (req, res) => {
+app.get('/api/trades', validatePagination, async (req, res) => {
     try {
-        const { page = 1, limit = 50 } = req.query;
-        const offset = (page - 1) * limit;
+        const { page, limit, offset } = req.pagination;
         
         const trades = await Trade.findAndCountAll({
             order: [['timestamp', 'DESC']],
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            limit,
+            offset
         });
         
         res.json({
@@ -320,12 +336,15 @@ app.get('/api/trades', async (req, res) => {
 });
 
 // Circuit breaker control
-app.post('/api/circuit-breaker', async (req, res) => {
+app.post('/api/circuit-breaker', apiKeyAuth, strictLimiter, async (req, res) => {
     try {
         const { action, reason } = req.body;
         
-        if (!['pause', 'resume', 'emergency'].includes(action)) {
-            return res.status(400).json({ error: 'Invalid action' });
+        if (!action || !['pause', 'resume', 'emergency'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action. Must be: pause, resume, or emergency' });
+        }
+        if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+            return res.status(400).json({ error: 'Reason is required' });
         }
         
         await triggerCircuitBreaker(action, reason);
@@ -341,18 +360,32 @@ app.post('/api/circuit-breaker', async (req, res) => {
 // Get circuit breaker status
 app.get('/api/circuit-breaker/status', async (req, res) => {
     try {
-        const contractState = await energyContract.getContractState();
-        
+        if (energyContract) {
+            const contractState = await energyContract.getContractState();
+            return res.json({
+                state: Number(contractState.state),
+                totalSupply: contractState.totalSupply_.toString(),
+                dailyVolume: contractState.dailyVolume_.toString(),
+                lastVolumeReset: new Date(Number(contractState.lastVolumeReset_) * 1000).toISOString(),
+                source: 'blockchain'
+            });
+        }
         res.json({
-            contractState: contractState.state,
-            totalSupply: contractState.totalSupply_.toString(),
-            dailyVolume: contractState.dailyVolume_.toString(),
-            lastVolumeReset: new Date(contractState.lastVolumeReset_.toNumber() * 1000).toISOString()
+            state: circuitBreakerState,
+            totalSupply: '0',
+            dailyVolume: '0',
+            lastVolumeReset: new Date().toISOString(),
+            source: 'local'
         });
-        
     } catch (error) {
         logger.error('Error fetching circuit breaker status:', error);
-        res.status(500).json({ error: error.message });
+        res.json({
+            state: circuitBreakerState,
+            totalSupply: '0',
+            dailyVolume: '0',
+            lastVolumeReset: new Date().toISOString(),
+            source: 'fallback'
+        });
     }
 });
 
@@ -462,37 +495,34 @@ async function executeMitigation(finding, strategy) {
 // Trigger circuit breaker
 async function triggerCircuitBreaker(action, reason) {
     try {
-        const privateKey = process.env.CONTRACT_PRIVATE_KEY;
-        if (!privateKey) {
-            throw new Error('Contract private key not configured');
-        }
-        
-        const wallet = new ethers.Wallet(privateKey, provider);
-        const contractWithSigner = energyContract.connect(wallet);
-        
         let newState;
         switch (action) {
             case 'pause':
-                newState = 1; // Paused
+                newState = 1;
                 break;
             case 'resume':
-                newState = 0; // Normal
+                newState = 0;
                 break;
             case 'emergency':
-                newState = 2; // Emergency
+                newState = 2;
                 break;
             default:
                 throw new Error('Invalid action');
         }
-        
-        const tx = await contractWithSigner.triggerCircuitBreaker(newState, reason);
-        await tx.wait();
+
+        // Try blockchain first
+        if (energyContract && process.env.CONTRACT_PRIVATE_KEY) {
+            const wallet = new ethers.Wallet(process.env.CONTRACT_PRIVATE_KEY, provider);
+            const contractWithSigner = energyContract.connect(wallet);
+            const tx = await contractWithSigner.triggerCircuitBreaker(newState, reason);
+            await tx.wait();
+        }
         
         // Log circuit breaker event
         await CircuitBreakerEvent.create({
             newState: action,
             reason,
-            triggeredBy: wallet.address,
+            triggeredBy: process.env.CONTRACT_PRIVATE_KEY ? 'contract-owner' : 'api',
             timestamp: new Date()
         });
         
@@ -554,7 +584,8 @@ async function initializeDatabase() {
         await sequelize.authenticate();
         logger.info('Database connection established');
         
-        await sequelize.sync({ alter: true });
+        const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
+        await sequelize.sync(syncOptions);
         logger.info('Database models synchronized');
         
     } catch (error) {
