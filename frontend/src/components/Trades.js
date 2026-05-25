@@ -58,7 +58,6 @@ const Trades = ({ trades, onRefresh }) => {
   };
 
   const totalVolume = trades.reduce((sum, trade) => sum + parseFloat(trade.amount), 0);
-  const averagePrice = trades.reduce((sum, trade) => sum + parseFloat(trade.price), 0) / trades.length;
 
   const handleTradeClick = (trade) => {
     setSelectedTrade(trade);

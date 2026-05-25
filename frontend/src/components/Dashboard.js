@@ -4,8 +4,8 @@ import {
   LinearProgress, Chip, Paper, ToggleButtonGroup, ToggleButton, Alert
 } from '@mui/material';
 import {
-  TrendingUp, TrendingDown, Warning, CheckCircle,
-  Error, Info, Timeline, Speed, ShowChart, BarChart
+  TrendingUp, Warning, CheckCircle,
+  Error, Timeline, Speed, ShowChart, BarChart
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, AreaChart, Area } from 'recharts';
 import { getSeverityColor, getStatusColor, getTradeTypeColor, getTradeStatusColor } from '../utils';
@@ -109,12 +109,6 @@ const Dashboard = ({ alerts, trades, stats }) => {
     completed: trades.filter(t => t.status === 'completed').length,
     pending: trades.filter(t => t.status === 'pending').length,
     failed: trades.filter(t => t.status === 'failed').length
-  };
-
-  const tradeTypeBreakdown = {
-    normal: trades.filter(t => t.type === 'normal').length,
-    large: trades.filter(t => t.type === 'large').length,
-    whale: trades.filter(t => t.type === 'whale').length
   };
 
   const renderChart = () => {
