@@ -20,6 +20,18 @@ jobs:
       - run: npx hardhat compile
       - run: npx hardhat test
 
+  backend:
+    name: Backend API Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx jest test/server.test.js --verbose
+
   frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
